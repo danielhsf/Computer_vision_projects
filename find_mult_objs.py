@@ -2,21 +2,19 @@
 # -*- coding: utf-8 -*-
 import cv2
 from matplotlib import pyplot as plt
+import numpy as np
+from sklearn.cluster import MeanShift, estimate_bandwidth
 
-MIN_MATCH_COUNT = 10
+MIN_MATCH_COUNT = 3
 
-img1 = cv2.imread('gain.jpg', 0)  # queryImage
-img2 = cv2.imread('bee3.jpg', 0) # trainImage
+img1 = cv2.imread('right.jpg', 0) # queryImage
+img2 = cv2.imread('bee0.jpg', 0) # trainImage
 
 orb = cv2.xfeatures2d.SIFT_create()
-#cv2.ORB_create(10000, 1.2, nlevels=8, edgeThreshold = 5)
  
 # find the keypoints and descriptors with ORB
 kp1, des1 = orb.detectAndCompute(img1, None)
 kp2, des2 = orb.detectAndCompute(img2, None)
-
-import numpy as np
-from sklearn.cluster import MeanShift, estimate_bandwidth
 
 x = np.array([kp2[0].pt])
 
