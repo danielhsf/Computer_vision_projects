@@ -3,4 +3,4 @@ from framework import core
 
 u = core.Unpluggy()
 
-u.process("virtual_img.png")
+u.process("symbols.png")

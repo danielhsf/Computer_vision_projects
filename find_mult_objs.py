@@ -7,7 +7,7 @@ from sklearn.cluster import MeanShift, estimate_bandwidth
 
 MIN_MATCH_COUNT = 3
 
-img1 = cv2.imread('make.jpg', 0) # queryImage
+img1 = cv2.imread('right.jpg', 0) # queryImage
 img2 = cv2.imread('virtual_img.png', 0) # trainImage
 
 orb = cv2.xfeatures2d.SIFT_create()
@@ -23,7 +23,7 @@ for i in range(len(kp2)):
 
 x = x[1:len(x)]
 
-bandwidth = estimate_bandwidth(x, quantile=0.075, n_samples=len(x))
+bandwidth = estimate_bandwidth(x, quantile=0.05, n_samples=len(x))
 
 ms = MeanShift(bandwidth=bandwidth, bin_seeding=True, cluster_all=True)
 ms.fit(x)

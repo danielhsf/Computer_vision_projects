@@ -20,7 +20,7 @@ class Unpluggy:
 	
 	def __init__(self):
 		
-		self.detector = cv.xfeatures2d_SIFT.create()
+		self.detector = cv.xfeatures2d.SIFT_create()
 
 	def extractFilenames(self, itens):
 
@@ -139,7 +139,7 @@ class Unpluggy:
 		for i in range(len(keypoints)):
 			x = np.append(x, [keypoints[i].pt], axis=0)
 		x = x[1:len(x)]
-		bandwidth = estimate_bandwidth(x, quantile=0.075, n_samples=len(x))
+		bandwidth = estimate_bandwidth(x, quantile=0.5, n_samples=len(x))
 		ms = MeanShift(bandwidth=bandwidth, bin_seeding=True, cluster_all=True)
 		ms.fit(x)
 		labels = ms.labels_
@@ -170,7 +170,7 @@ class Unpluggy:
 				# store all the good matches as per Lowe's ratio test.
 				good = []
 				for m,n in matches:
-					if m.distance < 0.7*n.distance:
+					if m.distance < 0.75*n.distance:
 						good.append(m)
     
 				if len(good)>3:
@@ -188,7 +188,7 @@ class Unpluggy:
 					try:
 						dst = cv.perspectiveTransform(pts,M)
 						self.target = cv.polylines(self.target,[np.int32(dst)],True,(0, 255, 0),3, cv.LINE_AA)
-						plt.imshow(self.target, 'gray'), plt.show()
+						
 					except:
 						print ("Não deu para fazer a perspectiva") 
     
@@ -198,7 +198,7 @@ class Unpluggy:
 				matchesMask = None
 
 		#self.target_features = self.packKeypoints(keypoints, descriptors)
-
+		plt.imshow(self.target, 'gray'), plt.show()
 		
 	def process(self, target):
 		
