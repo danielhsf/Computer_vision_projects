@@ -3,10 +3,4 @@ from framework import core
 
 u = core.Unpluggy()
 
-u.checkSource()
-
-u.buildKeypoints()
-
-
-
-
+u.process("virtual_img.png")

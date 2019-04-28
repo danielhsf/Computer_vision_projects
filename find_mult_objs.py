@@ -8,7 +8,7 @@ from sklearn.cluster import MeanShift, estimate_bandwidth
 MIN_MATCH_COUNT = 3
 
 img1 = cv2.imread('make.jpg', 0) # queryImage
-img2 = cv2.imread('bee2.jpg', 0) # trainImage
+img2 = cv2.imread('virtual_img.png', 0) # trainImage
 
 orb = cv2.xfeatures2d.SIFT_create()
  
@@ -23,7 +23,7 @@ for i in range(len(kp2)):
 
 x = x[1:len(x)]
 
-bandwidth = estimate_bandwidth(x, quantile=0.07, n_samples=len(x))
+bandwidth = estimate_bandwidth(x, quantile=0.075, n_samples=len(x))
 
 ms = MeanShift(bandwidth=bandwidth, bin_seeding=True, cluster_all=True)
 ms.fit(x)
@@ -55,11 +55,16 @@ for i in range(n_clusters_):
     search_params = dict(checks = 50)
 
     flann = cv2.FlannBasedMatcher(index_params, search_params)
-
+    
+    matcher = cv2.BFMatcher(cv2.NORM_L2)
+    
+    
     des1 = np.float32(des1)
     des2 = np.float32(des2)
-
-    matches = flann.knnMatch(des1, des2, 2)
+    
+    matches = matcher.knnMatch(des1, trainDescriptors = des2, k = 2)
+    
+    #matches = flann.knnMatch(des1, des2, 2)
 
     # store all the good matches as per Lowe's ratio test.
     good = []

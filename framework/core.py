@@ -112,7 +112,7 @@ class Unpluggy:
 		    (int(target_corners[3,0,0]), int(target_corners[3,0,1])), (0,255,0), 4)
 		cv.line(self.target, (int(target_corners[3,0,0]), int(target_corners[3,0,1])),\
 		    (int(target_corners[0,0,0]), int(target_corners[0,0,1])), (0,255,0), 4)
-		
+		cv.imwrite("output.jpg",self.target)
 
 	def matchBlocks(self):
 
@@ -124,23 +124,87 @@ class Unpluggy:
 			corners = self.fillCorners(block)					
 			target_corners = cv.perspectiveTransform(corners, H)
 			self.drawBlock(target_corners)
-		
-		cv.imshow('Good Matches & Object detection', self.target)
-		cv.waitKey(25000)
+		#plt.show(self.target,"imagem") 
+		#plt.show()
+		#cv.imshow('Good Matches & Object detection', self.target)
+		#cv.waitKey(25000)
 
 		
 	def loadTarget(self, imsource):
 
 		self.target = cv.imread(imsource, cv.IMREAD_COLOR)
+		MIN_MATCH_COUNT = 3
 		keypoints, descriptors = self.detector.detectAndCompute(self.target, None)
-		self.target_features = Utils.packKeypoints(keypoints, descriptors)
+		x = np.array([keypoints[0].pt])
+		for i in range(len(keypoints)):
+			x = np.append(x, [keypoints[i].pt], axis=0)
+		x = x[1:len(x)]
+		bandwidth = estimate_bandwidth(x, quantile=0.075, n_samples=len(x))
+		ms = MeanShift(bandwidth=bandwidth, bin_seeding=True, cluster_all=True)
+		ms.fit(x)
+		labels = ms.labels_
+		#cluster_centers = ms.cluster_centers_
+		labels_unique = np.unique(labels)
+		n_clusters_ = len(labels_unique)
+		print("number of estimated clusters : %d" % n_clusters_)
+		s = [None] * n_clusters_
+		for i in range(n_clusters_):
+			l = ms.labels_
+			d, = np.where(l == i)
+			print(d.__len__())
+			s[i] = list(keypoints[xx] for xx in d)
+
+		#des2_ = des2
+        
+		for idx in range(len(self.blocks_list)):
+			kp1, d1 = self.unpackKeypoints(self.keypoints_descriptors[idx])
+			for i in range(n_clusters_):
+				kp2 = s[i]
+				l = ms.labels_
+				d, = np.where(l == i)
+				des2 = descriptors[d, ]
+				matcher = cv.BFMatcher(cv.NORM_L2)
+				des2 = np.float32(des2)
+				matches = matcher.knnMatch(d1, trainDescriptors = des2, k = 2)
+    
+				# store all the good matches as per Lowe's ratio test.
+				good = []
+				for m,n in matches:
+					if m.distance < 0.7*n.distance:
+						good.append(m)
+    
+				if len(good)>3:
+					src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
+					dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+					M, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC, 2)
+    
+					if M is None:
+						print ("No Homography")
+					else:
+						matchesMask = mask.ravel().tolist()
+    
+					h,w = 50,50
+					pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+					try:
+						dst = cv.perspectiveTransform(pts,M)
+						self.target = cv.polylines(self.target,[np.int32(dst)],True,(0, 255, 0),3, cv.LINE_AA)
+						plt.imshow(self.target, 'gray'), plt.show()
+					except:
+						print ("Não deu para fazer a perspectiva") 
+    
+				else:
+					print ("Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT))
+					
+				matchesMask = None
+
+		#self.target_features = self.packKeypoints(keypoints, descriptors)
 
 		
-	def proccess(self, target):
+	def process(self, target):
 		
 		self.loadBlocks()
 		self.loadTarget(target)
-		self.matchBlocks()
+		#self.matchBlocks()
 
 	def packKeypoints(self,keypoints, descriptors):
 
@@ -152,7 +216,7 @@ class Unpluggy:
 			temp_array.append(temp)
 		return temp_array
 
-	def unpackKeypoints(array):
+	def unpackKeypoints(self,array):
 
 	    keypoints = []
 	    descriptors = []
