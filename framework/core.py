@@ -163,14 +163,17 @@ class Unpluggy:
 				l = ms.labels_
 				d, = np.where(l == i)
 				des2 = descriptors[d, ]
-				matcher = cv.BFMatcher(cv.NORM_L2)
+				flann_params = dict(algorithm = 1, trees = 1)
+				matcher = cv.FlannBasedMatcher(flann_params, {})
+				#matcher = cv.DescriptorMatcher_create(cv.DescriptorMatcher_FLANNBASED)
+				#matcher = cv.BFMatcher(cv.NORM_L2)
 				des2 = np.float32(des2)
 				matches = matcher.knnMatch(d1, trainDescriptors = des2, k = 2)
     
 				# store all the good matches as per Lowe's ratio test.
 				good = []
 				for m,n in matches:
-					if m.distance < 0.75*n.distance:
+					if m.distance < 0.8*n.distance:
 						good.append(m)
     
 				if len(good)>3:
@@ -188,6 +191,7 @@ class Unpluggy:
 					try:
 						dst = cv.perspectiveTransform(pts,M)
 						self.target = cv.polylines(self.target,[np.int32(dst)],True,(0, 255, 0),3, cv.LINE_AA)
+						print(idx)
 						
 					except:
 						print ("Não deu para fazer a perspectiva") 

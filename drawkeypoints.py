@@ -52,8 +52,8 @@ matcher = cv2.BFMatcher(norm)
 
 opts, args = getopt.getopt(sys.argv[1:], '')
 
-img1 = cv2.imread("make.jpg", 0)
-img2 = cv2.imread("bee2.jpg", 0)
+img1 = cv2.imread("newleft.png", 0)
+img2 = cv2.imread("bee0.jpg", 0)
 
 kp1, desc1 = detector.detectAndCompute(img1, None)
 kp2, desc2 = detector.detectAndCompute(img2, None)
@@ -61,8 +61,8 @@ kp2, desc2 = detector.detectAndCompute(img2, None)
 raw_matches = matcher.knnMatch(desc1, trainDescriptors = desc2, k = 2)
 print(len(raw_matches))
 
-p1, p2, kp_pairs = filter_matches(kp1, kp2, raw_matches,10)
-if len(p1) >= 4:
+p1, p2, kp_pairs = filter_matches(kp1, kp2, raw_matches)
+if len(p1) >= 3:
     H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
     print('%d / %d  inliers/matched' % (np.sum(status), len(status)))
 

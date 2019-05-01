@@ -3,4 +3,4 @@ from framework import core
 
 u = core.Unpluggy()
 
-u.process("symbols.png")
+u.process("bee0.jpg")
