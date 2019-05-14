@@ -132,14 +132,15 @@ class Unpluggy:
 		
 	def loadTarget(self, imsource):
 
-		self.target = cv.imread(imsource, cv.IMREAD_COLOR)
-		MIN_MATCH_COUNT = 3
+		self.target = cv.imread(imsource, 1)
+		#newX,newY = self.target.shape[1]*1.5, self.target.shape[0]*1.5
+		#self.target = cv.resize(self.target,(int(newX),int(newY)))
 		keypoints, descriptors = self.detector.detectAndCompute(self.target, None)
 		x = np.array([keypoints[0].pt])
 		for i in range(len(keypoints)):
 			x = np.append(x, [keypoints[i].pt], axis=0)
 		x = x[1:len(x)]
-		bandwidth = estimate_bandwidth(x, quantile=0.5, n_samples=len(x))
+		bandwidth = estimate_bandwidth(x, quantile=0.2, n_samples=len(x))
 		ms = MeanShift(bandwidth=bandwidth, bin_seeding=True, cluster_all=True)
 		ms.fit(x)
 		labels = ms.labels_
@@ -163,23 +164,28 @@ class Unpluggy:
 				l = ms.labels_
 				d, = np.where(l == i)
 				des2 = descriptors[d, ]
-				flann_params = dict(algorithm = 1, trees = 1)
-				matcher = cv.FlannBasedMatcher(flann_params, {})
+				#flann_params = dict(algorithm = 1, trees = 1)
+				#matcher = cv.FlannBasedMatcher(flann_params, {})
 				#matcher = cv.DescriptorMatcher_create(cv.DescriptorMatcher_FLANNBASED)
-				#matcher = cv.BFMatcher(cv.NORM_L2)
+				matcher = cv.BFMatcher(cv.NORM_L2)
 				des2 = np.float32(des2)
 				matches = matcher.knnMatch(d1, trainDescriptors = des2, k = 2)
     
-				# store all the good matches as per Lowe's ratio test.
-				good = []
-				for m,n in matches:
-					if m.distance < 0.8*n.distance:
-						good.append(m)
+				MIN_MATCH_COUNT = 3
+				mkp1, mkp2 = [], []
+				for m in matches:
+					if len(m) == 2 and m[0].distance < m[1].distance * 0.7:
+						m = m[0]
+						mkp1.append( kp1[m.queryIdx] )
+						mkp2.append( kp2[m.trainIdx] )
+
+				p1 = np.float32([kp.pt for kp in mkp1])
+				p2 = np.float32([kp.pt for kp in mkp2])
     
-				if len(good)>3:
-					src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
-					dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-					M, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC, 2)
+				if len(p1)>3:
+					#src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
+					#dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+					M, mask = cv.findHomography(p1, p2, cv.RANSAC,5.0)
     
 					if M is None:
 						print ("No Homography")
@@ -197,9 +203,9 @@ class Unpluggy:
 						print ("Não deu para fazer a perspectiva") 
     
 				else:
-					print ("Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT))
+					print ("Not enough matches are found - %d/%d" % (len(p1),MIN_MATCH_COUNT))
 					
-				matchesMask = None
+				#matchesMask = None
 
 		#self.target_features = self.packKeypoints(keypoints, descriptors)
 		plt.imshow(self.target, 'gray'), plt.show()

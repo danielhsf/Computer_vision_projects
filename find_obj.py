@@ -83,7 +83,8 @@ def explore_match(win, img1, img2, kp_pairs, status = None, H = None):
     if H is not None:
         corners = np.float32([[0, 0], [w1, 0], [w1, h1], [0, h1]])
         corners = np.int32( cv.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2) + (w1, 0) )
-        cv.polylines(vis, [corners], True, (255, 255, 255))
+        print(corners)
+        cv.polylines(vis, [corners], True, (0, 255, 0),2, cv.LINE_AA)
 
     plt.imshow(vis)
     plt.show()
@@ -92,11 +93,12 @@ if __name__ == '__main__':
     print(__doc__)
     feature_name = 'sift'
     
-    fn1 = 'gain.jpg'
+    fn1 = 'images/right.jpg'
     fn2 = 'bee0.jpg'
 
     img1 = cv.imread(fn1, cv.IMREAD_GRAYSCALE)
     img2 = cv.imread(fn2, cv.IMREAD_GRAYSCALE)
+    img2 = img2[0:200,0:300]
     detector, matcher = init_feature('sift')
 
     if img1 is None:
