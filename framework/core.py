@@ -17,6 +17,7 @@ class Unpluggy:
 	blocks_list = []
 	blocks_path = 'images/'
 	keypoints_path = 'keypoints/'
+	place = []
 	
 	def __init__(self):
 		
@@ -156,9 +157,9 @@ class Unpluggy:
 			s[i] = list(keypoints[xx] for xx in d)
 
 		#des2_ = des2
-        
 		for idx in range(len(self.blocks_list)):
 			kp1, d1 = self.unpackKeypoints(self.keypoints_descriptors[idx])
+			
 			for i in range(n_clusters_):
 				kp2 = s[i]
 				l = ms.labels_
@@ -197,7 +198,14 @@ class Unpluggy:
 					try:
 						dst = cv.perspectiveTransform(pts,M)
 						self.target = cv.polylines(self.target,[np.int32(dst)],True,(0, 255, 0),3, cv.LINE_AA)
-						print(idx)
+						xc = int((dst[0][0][0] + dst[1][0][0] + dst[2][0][0] + dst[3][0][0])/4)
+						yc = int((dst[0][0][1] + dst[1][0][1] + dst[2][0][1] + dst[3][0][1])/4)
+						#xc = (dst[0][0][0] + dst[0][1][0] + dst[0][2][0] + dst[0][3][0])/4
+						#yc = (dst[0][0][1] + dst[0][1][1] + dst[0][2][1] + dst[0][3][1])/4
+						#xc = (dst[0][0] + dst[1][0] + dst[2][0] + dst[3][0])/4
+						#yc = (dst[0][1] + dst[1][1] + dst[2][1] + dst[3][1])/4
+						temporary = [self.blocks_list[idx],xc,yc]
+						self.place.append(temporary)
 						
 					except:
 						print ("Não deu para fazer a perspectiva") 
@@ -208,6 +216,7 @@ class Unpluggy:
 				#matchesMask = None
 
 		#self.target_features = self.packKeypoints(keypoints, descriptors)
+		self.place.sort(key=self.takeSecond)
 		plt.imshow(self.target, 'gray'), plt.show()
 		
 	def process(self, target):
@@ -236,3 +245,6 @@ class Unpluggy:
 	    	keypoints.append(temp_feature)
 	    	descriptors.append(temp_descriptor)
 	    return keypoints, np.array(descriptors)
+	
+	def takeSecond(self,elem):
+		return elem[2]

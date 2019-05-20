@@ -4,3 +4,5 @@ from framework import core
 u = core.Unpluggy()
 
 u.process("bee1.jpg")
+
+place = print(u.place)
