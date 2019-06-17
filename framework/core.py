@@ -175,7 +175,7 @@ class Unpluggy:
 				MIN_MATCH_COUNT = 3
 				mkp1, mkp2 = [], []
 				for m in matches:
-					if len(m) == 2 and m[0].distance < m[1].distance * 0.7:
+					if len(m) == 2 and m[0].distance < m[1].distance * 0.6:
 						m = m[0]
 						mkp1.append( kp1[m.queryIdx] )
 						mkp2.append( kp2[m.trainIdx] )

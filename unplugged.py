@@ -5,4 +5,5 @@ u = core.Unpluggy()
 
 u.process("bee1.jpg")
 
-place = print(u.place)
+
+print(u.place)
