@@ -134,6 +134,8 @@ class Unpluggy:
 	def loadTarget(self, imsource):
 
 		self.target = cv.imread(imsource, 1)
+		#r = cv.selectROI(self.target)
+		#self.target = self.target[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
 		#newX,newY = self.target.shape[1]*1.5, self.target.shape[0]*1.5
 		#self.target = cv.resize(self.target,(int(newX),int(newY)))
 		keypoints, descriptors = self.detector.detectAndCompute(self.target, None)
@@ -153,7 +155,7 @@ class Unpluggy:
 		for i in range(n_clusters_):
 			l = ms.labels_
 			d, = np.where(l == i)
-			print(d.__len__())
+			#print(d.__len__())
 			s[i] = list(keypoints[xx] for xx in d)
 
 		#des2_ = des2
@@ -172,46 +174,43 @@ class Unpluggy:
 				des2 = np.float32(des2)
 				matches = matcher.knnMatch(d1, trainDescriptors = des2, k = 2)
     
-				MIN_MATCH_COUNT = 3
+				#MIN_MATCH_COUNT = 3
 				mkp1, mkp2 = [], []
 				for m in matches:
-					if len(m) == 2 and m[0].distance < m[1].distance * 0.6:
+					if len(m) == 2 and (m[0].distance < m[1].distance * 0.7):
 						m = m[0]
 						mkp1.append( kp1[m.queryIdx] )
 						mkp2.append( kp2[m.trainIdx] )
 
 				p1 = np.float32([kp.pt for kp in mkp1])
+				#print(len(p1))
 				p2 = np.float32([kp.pt for kp in mkp2])
     
 				if len(p1)>3:
+					print(len(p1))
 					#src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
 					#dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 					M, mask = cv.findHomography(p1, p2, cv.RANSAC,5.0)
     
 					if M is None:
-						print ("No Homography")
+						print ("None")
 					else:
-						matchesMask = mask.ravel().tolist()
-    
-					h,w = 50,50
-					pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-					try:
-						dst = cv.perspectiveTransform(pts,M)
-						self.target = cv.polylines(self.target,[np.int32(dst)],True,(0, 255, 0),3, cv.LINE_AA)
-						xc = int((dst[0][0][0] + dst[1][0][0] + dst[2][0][0] + dst[3][0][0])/4)
-						yc = int((dst[0][0][1] + dst[1][0][1] + dst[2][0][1] + dst[3][0][1])/4)
-						#xc = (dst[0][0][0] + dst[0][1][0] + dst[0][2][0] + dst[0][3][0])/4
-						#yc = (dst[0][0][1] + dst[0][1][1] + dst[0][2][1] + dst[0][3][1])/4
-						#xc = (dst[0][0] + dst[1][0] + dst[2][0] + dst[3][0])/4
-						#yc = (dst[0][1] + dst[1][1] + dst[2][1] + dst[3][1])/4
-						temporary = [self.blocks_list[idx],xc,yc]
-						self.place.append(temporary)
-						
-					except:
-						print ("Não deu para fazer a perspectiva") 
-    
-				else:
-					print ("Not enough matches are found - %d/%d" % (len(p1),MIN_MATCH_COUNT))
+						#matchesMask = mask.ravel().tolist()
+						h,w = 50,50
+						pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+						try:
+							dst = cv.perspectiveTransform(pts,M)
+							self.target = cv.polylines(self.target,[np.int32(dst)],True,(0, 255, 0),3, cv.LINE_AA)
+							xc = int((dst[0][0][0] + dst[1][0][0] + dst[2][0][0] + dst[3][0][0])/4)
+							yc = int((dst[0][0][1] + dst[1][0][1] + dst[2][0][1] + dst[3][0][1])/4)
+							#xc = (dst[0][0][0] + dst[0][1][0] + dst[0][2][0] + dst[0][3][0])/4
+							#yc = (dst[0][0][1] + dst[0][1][1] + dst[0][2][1] + dst[0][3][1])/4
+							#xc = (dst[0][0] + dst[1][0] + dst[2][0] + dst[3][0])/4
+							#yc = (dst[0][1] + dst[1][1] + dst[2][1] + dst[3][1])/4
+							temporary = [self.blocks_list[idx],xc,yc]
+							self.place.append(temporary)
+						except:
+							print ("Não deu para fazer a perspectiva") 
 					
 				#matchesMask = None
 
